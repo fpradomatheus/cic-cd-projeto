@@ -1,0 +1,26 @@
+name: Notificar falhas de workflow
+
+on:
+  workflow_run:
+    workflows: ["Python CI"]
+    types:
+      - completed
+
+jobs:
+  notify:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar email de alerta
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "ALERTA: Workflow falhou - ${{ github.workflow }}"
+          body: |
+            O workflow ${{ github.workflow }} no repositório ${{ github.repository }} falhou.
+            Veja: ${{ github.event.workflow_run.html_url }}
+          to: ${{ secrets.ALERT_TO }}
+          from: ${{ secrets.SMTP_USERNAME }}
